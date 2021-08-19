@@ -10,27 +10,27 @@ class Main extends Component {
           <main role="main" className="col-lg-12 ml-auto mr-auto" style={{ maxWidth: '500px' }}>
             <div className="content mr-auto ml-auto">
               <p>&nbsp;</p>
-              <h2>Share Image</h2>
+              <h2>Share Post</h2>
               <form onSubmit={(event) => {
                 event.preventDefault()
-                const description = this.imageDescription.value
-                this.props.uploadImage(description)
+                const tweet = this.postDescription.value
+                this.props.uploadPost(tweet)
               }} >
-                <input type='file' accept=".jpg, .jpeg, .png, .bmp, .gif" onChange={this.props.captureFile} />
+                
                   <div className="form-group mr-sm-2">
                     <br></br>
                       <input
-                        id="imageDescription"
+                        id="postDescription"
                         type="text"
-                        ref={(input) => { this.imageDescription = input }}
+                        ref={(input) => { this.postDescription = input }}
                         className="form-control"
-                        placeholder="Image description..."
+                        placeholder="Post tweet..."
                         required />
                   </div>
-                <button type="submit" class="btn btn-primary btn-block btn-lg">Upload!</button>
+                <button type="submit" className="btn btn-primary btn-block btn-lg">Upload!</button>
               </form>
               <p>&nbsp;</p>
-              { this.props.images.map((image, key) => {
+              { this.props.posts.map((post, key) => {
                 return(
                   <div className="card mb-4" key={key} >
                     <div className="card-header">
@@ -38,26 +38,26 @@ class Main extends Component {
                         className='mr-2'
                         width='30'
                         height='30'
-                        src={`data:image/png;base64,${new Identicon(image.author, 30).toString()}`}
+                        src={`data:post/png;base64,${new Identicon(post.author, 30).toString()}`}
                       />
-                      <small className="text-muted">{image.author}</small>
+                      <small className="text-muted">{post.author}</small>
                     </div>
-                    <ul id="imageList" className="list-group list-group-flush">
+                    <ul id="postList" className="list-group list-group-flush">
                       <li className="list-group-item">
-                        <p class="text-center"><img src={`https://ipfs.infura.io/ipfs/${image.hash}`} style={{ maxWidth: '420px'}}/></p>
-                        <p>{image.description}</p>
+                        {/* <p class="text-center"><img src={`https://ipfs.infura.io/ipfs/${post.hash}`} style={{ maxWidth: '420px'}}/></p> */}
+                        <p>{post.tweet}</p>
                       </li>
                       <li key={key} className="list-group-item py-2">
                         <small className="float-left mt-1 text-muted">
-                          TIPS: {window.web3.utils.fromWei(image.tipAmount.toString(), 'Ether')} ETH
+                          TIPS: {window.web3.utils.fromWei(post.tipAmount.toString(), 'Ether')} ETH
                         </small>
                         <button
                           className="btn btn-link btn-sm float-right pt-0"
-                          name={image.id}
+                          name={post.id}
                           onClick={(event) => {
                             let tipAmount = window.web3.utils.toWei('0.1', 'Ether')
                             console.log(event.target.name, tipAmount)
-                            this.props.tipImageOwner(event.target.name, tipAmount)
+                            this.props.tipPostOwner(event.target.name, tipAmount)
                           }}
                         >
                           TIP 0.1 ETH

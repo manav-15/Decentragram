@@ -40,25 +40,52 @@ class App extends Component {
     const networkData = Decentragram.networks[networkId]
     if(networkData) {
       const decentragram = new web3.eth.Contract(Decentragram.abi, networkData.address)
+      //console.log(decentragram)
       this.setState({ decentragram })
-      const imagesCount = await decentragram.methods.imageCount().call()
-      this.setState({ imagesCount })
-      // Load images
-      for (var i = 1; i <= imagesCount; i++) {
-        const image = await decentragram.methods.images(i).call()
+      const postsCount = await decentragram.methods.postCount().call()
+      //console.log(postsCount)
+      this.setState({ postsCount })
+      // Load posts
+      for (var i = 1; i <= postsCount; i++) {
+        const post = await decentragram.methods.posts(i).call()
         this.setState({
-          images: [...this.state.images, image]
+          posts: [...this.state.posts, post]
         })
       }
-      // Sort images. Show highest tipped images first
+      // Sort posts. Show highest tipped posts first
       this.setState({
-        images: this.state.images.sort((a,b) => b.tipAmount - a.tipAmount )
+        posts: this.state.posts.sort((a,b) => b.tipAmount - a.tipAmount )
       })
       this.setState({ loading: false})
     } else {
       window.alert('Decentragram contract not deployed to detected network.')
     }
   }
+
+
+
+  async updateList(){
+    //this.setState({ loading: true})
+    console.log("Entered")
+    console.log(this.state.decentragram)
+    const postsCount = await this.state.decentragram.methods.postCount().call()
+    console.log(postsCount)
+    if(postsCount > this.state.postsCount){
+      console.log("enter inside")
+      const post = await this.state.decentragram.methods.posts(postsCount).call()
+      this.setState({
+        posts: [...this.state.posts, post]
+      })
+      this.setState({
+        posts: this.state.posts.sort((a,b) => b.tipAmount - a.tipAmount )
+      })
+      
+      this.setState({ postsCount })
+    }
+    //this.setState({ loading: false})
+  }
+
+
 
   captureFile = event => {
 
@@ -73,28 +100,44 @@ class App extends Component {
     }
   }
 
-  uploadImage = description => {
+  async uploadPost(tweet) {
     console.log("Submitting file to ipfs...")
 
     //adding file to the IPFS
-    ipfs.add(this.state.buffer, (error, result) => {
-      console.log('Ipfs result', result)
-      if(error) {
-        console.error(error)
-        return
-      }
+    // ipfs.add(this.state.buffer, (error, result) => {
+    //   console.log('Ipfs result', result)
+    //   if(error) {
+    //     console.error(error)
+    //     return
+    //   }
 
-      this.setState({ loading: true })
-      this.state.decentragram.methods.uploadImage(result[0].hash, description).send({ from: this.state.account }).on('transactionHash', (hash) => {
-        this.setState({ loading: false })
-      })
+    //   this.setState({ loading: true })
+    //   this.state.decentragram.methods.uploadPost(result[0].hash, tweet).send({ from: this.state.account }).on('transactionHash', (hash) => {
+    //     this.setState({ loading: false })
+    //   })
+    // })
+
+    // this.setState({ loading: true })
+    // await this.state.decentragram.methods.uploadPost(tweet).send({ from: this.state.account }).on('transactionHash', async(hash) => {
+    //   await this.updateList()
+    //   this.setState({ loading: false })
+    // })
+
+
+    this.setState({ loading: true })
+    this.state.decentragram.methods.uploadPost(tweet).send({ from: this.state.account }).on('transactionHash', (hash) => {
+      window.location.reload()
+      
     })
+
+
   }
 
-  tipImageOwner(id, tipAmount) {
+  tipPostOwner(id, tipAmount) {
     this.setState({ loading: true })
-    this.state.decentragram.methods.tipImageOwner(id).send({ from: this.state.account, value: tipAmount }).on('transactionHash', (hash) => {
-      this.setState({ loading: false })
+    this.state.decentragram.methods.tipPostOwner(id).send({ from: this.state.account, value: tipAmount }).on('transactionHash', (hash) => {
+      
+      window.location.reload()
     })
   }
 
@@ -103,13 +146,15 @@ class App extends Component {
     this.state = {
       account: '',
       decentragram: null,
-      images: [],
-      loading: true
+      posts: [],
+      loading: true,
+      postCount: 0
     }
 
-    this.uploadImage = this.uploadImage.bind(this)
-    this.tipImageOwner = this.tipImageOwner.bind(this)
+    this.uploadPost = this.uploadPost.bind(this)
+    this.tipPostOwner = this.tipPostOwner.bind(this)
     this.captureFile = this.captureFile.bind(this)
+    this.updateList = this.updateList.bind(this)
   }
 
   render() {
@@ -119,10 +164,10 @@ class App extends Component {
         { this.state.loading
           ? <div id="loader" className="text-center mt-5"><p>Loading...</p></div>
           : <Main
-              images={this.state.images}
+              posts={this.state.posts}
               captureFile={this.captureFile}
-              uploadImage={this.uploadImage}
-              tipImageOwner={this.tipImageOwner}
+              uploadPost={this.uploadPost}
+              tipPostOwner={this.tipPostOwner}
             />
         }
       </div>
